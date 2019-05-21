@@ -1,0 +1,39 @@
+plugins {
+	id 'org.springframework.boot' version '2.1.5.RELEASE'
+	id 'java'
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+group = 'com.sap.concur.demo'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '12'
+// sourceCompatibility = '1.8'
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('azureVersion', "2.1.2")
+}
+
+dependencies {
+	compile "com.nimbusds:oauth2-oidc-sdk:5.64.4"
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.security:spring-security-oauth2-client'
+	implementation 'org.springframework.security:spring-security-oauth2-jose'
+	implementation 'com.microsoft.azure:azure-active-directory-spring-boot-starter'
+	implementation 'com.microsoft.azure:azure-keyvault-secrets-spring-boot-starter'
+	implementation 'com.microsoft.azure:azure-spring-boot-starter'
+	runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "com.microsoft.azure:azure-spring-boot-bom:${azureVersion}"
+	}
+}
