@@ -7,8 +7,8 @@ apply plugin: 'io.spring.dependency-management'
 
 group = 'com.sap.concur.demo'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '12'
-// sourceCompatibility = '1.8'
+// sourceCompatibility = '12'
+sourceCompatibility = '1.8'
 
 repositories {
 	mavenCentral()

@@ -1,16 +1,20 @@
-FROM openjdk:12-jdk-alpine as build-step
-WORKDIR /workspace
-COPY build.gradle settings.gradle gradlew /workspace/
-COPY gradle/ /workspace/gradle/
-# RUN ./gradlew resolveDependencies
-COPY . /workspace
+FROM openjdk:12-jdk-alpine as build
+ENV APP_HOME=/usr/app
+WORKDIR $APP_HOME
+COPY build.gradle settings.gradle gradlew $APP_HOME/
+COPY gradle/ $APP_HOME/gradle/
+RUN ./gradlew build || return 0
+COPY . $APP_HOME
 RUN ./gradlew bootJar
 
 FROM openjdk:12-alpine
 RUN apk add bash
-COPY --from=build-step /workspace/build/libs/aaddemo-0.0.1-SNAPSHOT.jar /aaddemo.jar
-COPY prepare.sh /prepare.sh
+ENV APP_HOME=/usr/app
+WORKDIR $APP_HOME
+ENV ARTIFACT_NAME=aaddemo-0.0.1-SNAPSHOT.jar
+COPY --from=build $APP_HOME/build/libs/$ARTIFACT_NAME $APP_HOME/
+COPY prepare.sh $APP_HOME/prepare.sh
 ENV PROFILE docker
 EXPOSE 8080
-ENTRYPOINT ["/prepare.sh"]
-CMD ["java", "-jar", "aaddemo.jar"]
+ENTRYPOINT ["$APP_HOME/prepare.sh"]
+CMD ["java", "-jar", "$APP_HOME/$ARTIFACT_NAME" ]
