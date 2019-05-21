@@ -7,19 +7,19 @@ apply plugin: 'io.spring.dependency-management'
 
 group = 'com.sap.concur.demo'
 version = '0.0.1-SNAPSHOT'
-// sourceCompatibility = '12'
-sourceCompatibility = '1.8'
+sourceCompatibility = '12'
+// sourceCompatibility = '1.8'
 
 repositories {
 	mavenCentral()
 }
 
 ext {
-	set('azureVersion', "2.1.2")
+	set('azureVersion', '2.1.2')
 }
 
 dependencies {
-	compile "com.nimbusds:oauth2-oidc-sdk:5.64.4"
+	compile 'com.nimbusds:oauth2-oidc-sdk:5.64.4'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.security:spring-security-oauth2-client'

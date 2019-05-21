@@ -28,7 +28,6 @@ public class HelloController {
    @RequestMapping(path = "/isAuthenticated", method = RequestMethod.GET)
    public String isAuthenticated() {
       Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-      return "Welcome, you're authenticated: " + auth.getPrincipal();
+      return "Welcome, you're authenticated: " + auth.getPrincipal().toString();
    }
 }

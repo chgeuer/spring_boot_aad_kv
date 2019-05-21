@@ -3,20 +3,19 @@
 #
 # Check https://github.com/microsoft/azure-spring-boot/tree/master/azure-spring-boot-samples/azure-keyvault-secrets-spring-boot-sample
 #
-export rg_name=spring
+export rg_name="spring"
 export prefix="chgeuerspring"
-export keyvault_name="${prefix}kv"
 export location="westeurope"
+export sql_azure_connection_string="jdbc:mysql://somedb-in-azure:3306/moviedb"
 
+export keyvault_name="${prefix}kv"
 export service_principal_id="${AAD_CLIENT_ID}"
-
 #
 # Azure KeyVault doesn't allow "." in names, so we need to replace the '.' by '-'
 #
 export spring_property="spring.datasource.url"
 export spring_property_name_for_keyvault="${spring_property//\./-}"
 
-export sql_azure_connection_string="jdbc:mysql://localhost:3306/moviedb"
 
 # az keyvault create --name "${prefix}kv" \
 #     --resource-group "${rg_name}" \
