@@ -17,6 +17,7 @@ RUN apk add bash
 WORKDIR /app
 COPY --from=build /app/build/libs/aaddemo-0.0.1-SNAPSHOT.jar /app/aaddemo.jar
 COPY prepare.sh /app/prepare.sh
+RUN chmod +x /app/prepare.sh
 ENV PROFILE docker
 EXPOSE 8080
 ENTRYPOINT ["/app/prepare.sh"]

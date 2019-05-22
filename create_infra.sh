@@ -111,3 +111,20 @@ az acr task create \
     --branch master \
     --file Dockerfile \
     --git-access-token $github
+
+export acr_password="$(az acr credential show \
+    --resource-group "${rg_name}" \
+    --name "${acr_name}" \
+    --query "passwords[?contains(name,'password2')].[value]" \
+    -o tsv)"
+
+az container create \
+    --name myapp \
+    --resource-group "${rg_name}" \
+    --location  "${location}" \
+    --image "${acr_name}.azurecr.io/${TAG}:cb2" \
+    --registry-password "${acr_password}"
+
+docker login "${DOCKER_REGISTRY}" \
+       --username "${DOCKER_USERNAME}" \
+       --password "${DOCKER_PASSWORD}"

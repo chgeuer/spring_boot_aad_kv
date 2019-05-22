@@ -15,3 +15,6 @@ docker run \
     -p 8080:8080/tcp \
     --interactive --tty --rm \
     "${TAG}"
+
+
+#     --entrypoint /bin/bash \
