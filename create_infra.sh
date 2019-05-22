@@ -14,6 +14,10 @@ echo "${sql_password}" > ./.sql_password
 export keyvault_name="${prefix}kv"
 export service_principal_id="${AAD_CLIENT_ID}"
 
+export acr_name="${prefix}acr"
+
+
+
 az sql server create \
     --name "${sql_server_name}" \
     --resource-group "${rg_name}" \
@@ -81,3 +85,29 @@ az keyvault secret set \
     --vault-name "${keyvault_name}" \
     --name "$(spring_property_name_to_keyvault_name 'spring.datasource.url')" \
     --value "$(spring_connection_string $sql_server_name $sql_database $sql_username $sql_password)"
+
+
+#
+# Create an Azure Container Registry
+#
+az acr create \
+    --name "${acr_name}" \
+    --resource-group "${rg_name}" \
+    --location  "${location}" \
+    --sku Standard \
+    --admin-enabled
+
+#
+# https://docs.microsoft.com/en-us/azure/container-registry/container-registry-tutorial-build-task
+#
+
+export TAG=springaad
+
+az acr task create \
+    --registry "${acr_name}" \
+    --name taskhelloworld \
+    --image $TAG:{{.Run.ID}} \
+    --context https://github.com/chgeuer/spring_boot_aad_kv.git \
+    --branch master \
+    --file Dockerfile \
+    --git-access-token $github
