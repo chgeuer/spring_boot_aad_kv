@@ -3,7 +3,8 @@ WORKDIR /app
 RUN apk add --update bash curl
 COPY gradlew /app/
 COPY gradle/ /app/gradle/
-RUN ./gradlew bootJar || return 0
+RUN chmod +x gradlew && \
+    ./gradlew bootJar || return 0
 
 FROM gradle as build
 WORKDIR /app
