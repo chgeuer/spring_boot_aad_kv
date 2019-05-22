@@ -17,8 +17,9 @@ docker run ^
     -e "KEYVAULT_URI=%KEYVAULT_URI%" ^
     -p 8080:8080/tcp ^
     --interactive --tty --rm ^
-    --entrypoint /bin/bash ^
     %TAG%
+
+REM     --entrypoint /bin/bash ^
 
 REM docker run ^
 REM      -e "AAD_TENANT_ID=%AAD_TENANT_ID%" ^

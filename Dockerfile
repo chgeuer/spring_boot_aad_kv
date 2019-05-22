@@ -1,9 +1,14 @@
-FROM openjdk:12-jdk-alpine as build
+FROM openjdk:12-jdk-alpine as gradle
 WORKDIR /app
-COPY build.gradle settings.gradle gradlew /app/
+RUN apk add --update bash curl
+COPY gradlew /app/
 COPY gradle/ /app/gradle/
-RUN ./gradlew build || return 0
-COPY . /app/
+RUN ./gradlew bootJar || return 0
+
+FROM gradle as build
+WORKDIR /app
+COPY build.gradle settings.gradle /app/
+COPY src/ /app/src/
 RUN ./gradlew bootJar
 
 FROM openjdk:12-alpine
