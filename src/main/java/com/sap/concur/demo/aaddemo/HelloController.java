@@ -29,18 +29,11 @@ public class HelloController {
    @Value("${spring.datasource.url}")
    private String spring_datasource_url;
 
-   @Value("${spring.datasource.username}")
-   private String spring_datasource_username;
-
-   @Value("${spring.datasource.password}")
-   private String spring_datasource_password;
-
-
    @Autowired
    @PreAuthorize("hasRole('christian')")
    @RequestMapping(path = "/", method = RequestMethod.GET)
    public String isSomeChristian() {
-      return "Welcome, you're in the 'christian' Azure AD group\nURL: " + spring_datasource_url + "\nuser: " + spring_datasource_username + "\npass: " + spring_datasource_password;
+      return "Welcome, you're in the 'christian' Azure AD group URL: " + spring_datasource_url;
    }
 
    @PreAuthorize("isAuthenticated()")
