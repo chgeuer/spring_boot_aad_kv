@@ -12,6 +12,7 @@ export sql_password="$(openssl rand 14 -base64)"
 echo "${sql_password}" > ./.sql_password
 
 export keyvault_name="${prefix}kv"
+export KEYVAULT_URI="https://${keyvault_name}.vault.azure.net/"
 export service_principal_id="${AAD_CLIENT_ID}"
 
 export acr_name="${prefix}acr"
@@ -118,13 +119,27 @@ export acr_password="$(az acr credential show \
     --query "passwords[?contains(name,'password2')].[value]" \
     -o tsv)"
 
+export cloud_build_id="cb3"
+
 az container create \
     --name myapp \
     --resource-group "${rg_name}" \
     --location  "${location}" \
-    --image "${acr_name}.azurecr.io/${TAG}:cb2" \
-    --registry-password "${acr_password}"
+    --image "${acr_name}.azurecr.io/${TAG}:${cloud_build_id}" \
+    --registry-username "${acr_name}" \
+    --registry-password "${acr_password}" \
+    --ip-address Public \
+    --dns-name-label "${prefix}aci"\
+    --ports 8080 \
+    --protocol TCP \
+    --environment-variables \
+        "AAD_TENANT_ID=${AAD_TENANT_ID}" \
+        "AAD_CLIENT_ID=${AAD_CLIENT_ID}" \
+        "AAD_GROUP=${AAD_GROUP}" \
+        "KEYVAULT_URI=${KEYVAULT_URI}" \
+    --secure-environment-variables \
+        "AAD_CLIENT_SECRET=${AAD_CLIENT_SECRET}"
 
-docker login "${DOCKER_REGISTRY}" \
-       --username "${DOCKER_USERNAME}" \
-       --password "${DOCKER_PASSWORD}"
+# docker login "${DOCKER_REGISTRY}" \
+#        --username "${DOCKER_USERNAME}" \
+#        --password "${DOCKER_PASSWORD}"
