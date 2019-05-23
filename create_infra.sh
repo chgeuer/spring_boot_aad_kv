@@ -1,13 +1,19 @@
 #!/bin/bash
 
 export AAD_TENANT_ID="chgeuerfte.onmicrosoft.com"
-echo "Using Azure AD tenant ${AAD_TENANT_ID}"
+export location="westeurope"
+export rg_name="spring3"
+export prefix="spring3"
+echo "Using Azure AD tenant ${AAD_TENANT_ID}, deploying to resource group ${rg_name} in ${location}"
+
+#
+# The Azure AD group which users must be in to access the web app
+#
 export AAD_GROUP="christian"
 
-export rg_name="spring2"
-export prefix="chgpconcur"
-export location="westeurope"
-
+#
+# Various names for resources
+#
 export sql_server_name="${prefix}sql"
 export sql_database="${prefix}db"
 export sql_username="${prefix}user"
@@ -24,15 +30,30 @@ az group create \
     --name "${rg_name}" \
     --location  "${location}"
 
+#
+# Create a bunch of random passwords
+#
 
 mkdir .passwords
-
 export sql_password="$(openssl rand 14 -base64)"
 echo "${sql_password}" > ".passwords/.${rg_name}-${prefix}-sql_password"
 
 # export service_principal_pass="${AAD_CLIENT_ID}"
 export service_principal_pass="$(openssl rand 14 -base64)"
 echo "${service_principal_pass}" > ".passwords/.${rg_name}-${prefix}-service_principal_pass"
+
+export aadGraphAPI="00000002-0000-0000-c000-000000000000"
+export signInAndReadUserProfile="311a71cc-e848-46a1-bdf8-97ff7156d8e6"
+
+export MANIFEST="[
+    {
+        \"resourceAppId\": \"${aadGraphAPI}\",
+        \"resourceAccess\": [
+            { \"id\": \"${signInAndReadUserProfile}\", \"type\": \"Scope\" }
+        ]
+    }
+]"
+echo "${MANIFEST}" > manifest.json
 
 #export service_principal_id="${AAD_CLIENT_ID}"
 export service_principal_id="$(az ad app create \
@@ -46,10 +67,13 @@ export service_principal_id="$(az ad app create \
         "http://${AAD_TENANT_ID}/${prefix}" \
     --reply-urls \
         "http://localhost:8080/login/oauth2/code/azure" \
-        "http://chgeuerconcuraci.westeurope.azurecontainer.io:8080/login/oauth2/code/azure" \
+        "http://${public_web_app_hostname}:8080/login/oauth2/code/azure" \
+    --required-resource-accesses @manifest.json \
     --query "appId" -o tsv)"
 echo "Application ID: ${service_principal_id}"
-echo "${service_principal_id}" > ".${rg_name}-${prefix}-service_principal_id"
+echo "${service_principal_id}" > ".passwords/.${rg_name}-${prefix}-service_principal_id"
+
+rm manifest.json
 
 #
 # Turn on "signInAudience": "AzureADMultipleOrgs"
@@ -64,23 +88,17 @@ az ad app update \
 az ad sp create \
     --id "${service_principal_id}"
 
-az ad app update \
-    --id "${service_principal_id}" \
-    --reply-urls \
-        "http://${public_web_app_hostname}:8080/login/oauth2/code/azure" \
-        "http://localhost:8080/login/oauth2/code/azure"
-
-export aadGraphAPI="00000002-0000-0000-c000-000000000000"
-export signInAndReadUserProfile="311a71cc-e848-46a1-bdf8-97ff7156d8e6"
+# az ad app update \
+#     --id "${service_principal_id}" \
+#     --reply-urls \
+#         "http://${public_web_app_hostname}:8080/login/oauth2/code/azure" \
+#         "http://localhost:8080/login/oauth2/code/azure"
 
 az ad app permission grant \
     --id "${service_principal_id}" \
     --api "${aadGraphAPI}"
 
-az ad app permission add \
-    --id "${service_principal_id}" \
-    --api "${aadGraphAPI}" \
-    --api-permissions "${signInAndReadUserProfile}=Scope"
+# az ad app permission add --id "${service_principal_id}" --api "${aadGraphAPI}" --api-permissions "${signInAndReadUserProfile}=Scope"
 
 #
 # Create SQL Azure Server
@@ -162,7 +180,6 @@ az keyvault set-policy \
     --spn "${service_principal_id}" \
     --secret-permission get list
 
-
 #
 # Store the DB connection string in KeyVault
 #
@@ -195,23 +212,25 @@ export acr_password="$(az acr credential show \
 #
 export TAG=springaad
 
+#
+# Please note that this step uses my personal "$github" token...
+#
 az acr task create \
     --registry "${acr_name}" \
     --name taskhelloworld \
     --image $TAG:{{.Run.ID}} \
+    --image $TAG:latest \
     --context https://github.com/chgeuer/spring_boot_aad_kv.git \
     --branch master \
     --file Dockerfile \
     --git-access-token $github
-
-export cloud_build_id="cb1"
 
 az container create \
     --name "${aci_name}" \
     --dns-name-label "${aci_name}"\
     --resource-group "${rg_name}" \
     --location  "${location}" \
-    --image "${acr_name}.azurecr.io/${TAG}:${cloud_build_id}" \
+    --image "${acr_name}.azurecr.io/${TAG}:latest" \
     --registry-username "${acr_name}" \
     --registry-password "${acr_password}" \
     --ip-address Public \

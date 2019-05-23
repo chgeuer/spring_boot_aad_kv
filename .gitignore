@@ -29,5 +29,5 @@ HELP.md
 ### VS Code ###
 .vscode/
 /bin
-/.sql_password
 /.passwords
+/manifest.json
