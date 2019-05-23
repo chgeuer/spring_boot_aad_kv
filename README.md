@@ -12,6 +12,12 @@ This demo shows multiple aspects:
   - On the [/claims](http://localhost:8080/claims) endpoint, it prints out the user's security token's properties. 
   - On `GET /pet`, `POST /pet/create`, `GET /pet/123` and `DELETE /pet/123` we authenticate the user, and interact with SQL Azure in the back. 
 
+## Overview
+
+![Overview][docs/overview.png]
+
+<div align="center"><img src="docs/overview.png"></img></div>
+
 ## misc links
 
 - [Tutorial: Secure a Java web app using the Spring Boot Starter for Azure Active Directory](https://docs.microsoft.com/en-us/java/azure/spring-framework/configure-spring-boot-starter-java-app-with-azure-active-directory?view=azure-java-stable)
