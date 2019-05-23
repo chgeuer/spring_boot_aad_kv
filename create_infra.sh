@@ -12,8 +12,10 @@ export sql_server_name="${prefix}sql"
 export sql_database="${prefix}db"
 export sql_username="${prefix}user"
 export acr_name="${prefix}acr"
+export aci_name="${prefix}aci"
 export keyvault_name="${prefix}kv"
 export KEYVAULT_URI="https://${keyvault_name}.vault.azure.net/"
+export public_web_app_hostname="${aci_name}.${location}.azurecontainer.io"
 
 #
 # Create the resource group
@@ -22,12 +24,15 @@ az group create \
     --name "${rg_name}" \
     --location  "${location}"
 
+
+mkdir .passwords
+
 export sql_password="$(openssl rand 14 -base64)"
-echo "${sql_password}" > ".${rg_name}-${prefix}-sql_password"
+echo "${sql_password}" > ".passwords/.${rg_name}-${prefix}-sql_password"
 
 # export service_principal_pass="${AAD_CLIENT_ID}"
 export service_principal_pass="$(openssl rand 14 -base64)"
-echo "${service_principal_pass}" > ".${rg_name}-${prefix}-service_principal_pass"
+echo "${service_principal_pass}" > ".passwords/.${rg_name}-${prefix}-service_principal_pass"
 
 #export service_principal_id="${AAD_CLIENT_ID}"
 export service_principal_id="$(az ad app create \
@@ -58,6 +63,24 @@ az ad app update \
 #
 az ad sp create \
     --id "${service_principal_id}"
+
+az ad app update \
+    --id "${service_principal_id}" \
+    --reply-urls \
+        "http://${public_web_app_hostname}:8080/login/oauth2/code/azure" \
+        "http://localhost:8080/login/oauth2/code/azure"
+
+export aadGraphAPI="00000002-0000-0000-c000-000000000000"
+export signInAndReadUserProfile="311a71cc-e848-46a1-bdf8-97ff7156d8e6"
+
+az ad app permission grant \
+    --id "${service_principal_id}" \
+    --api "${aadGraphAPI}"
+
+az ad app permission add \
+    --id "${service_principal_id}" \
+    --api "${aadGraphAPI}" \
+    --api-permissions "${signInAndReadUserProfile}=Scope"
 
 #
 # Create SQL Azure Server
@@ -181,17 +204,17 @@ az acr task create \
     --file Dockerfile \
     --git-access-token $github
 
-export cloud_build_id="cb3"
+export cloud_build_id="cb1"
 
 az container create \
-    --name myapp \
+    --name "${aci_name}" \
+    --dns-name-label "${aci_name}"\
     --resource-group "${rg_name}" \
     --location  "${location}" \
     --image "${acr_name}.azurecr.io/${TAG}:${cloud_build_id}" \
     --registry-username "${acr_name}" \
     --registry-password "${acr_password}" \
     --ip-address Public \
-    --dns-name-label "${prefix}aci"\
     --ports 8080 \
     --protocol TCP \
     --environment-variables \
@@ -201,6 +224,8 @@ az container create \
         "AAD_CLIENT_ID=${service_principal_id}" \
     --secure-environment-variables \
         "AAD_CLIENT_SECRET=${service_principal_pass}"
+
+echo "Now navigate to http://${public_web_app_hostname}:8080"
 
 # docker login "${DOCKER_REGISTRY}" \
 #        --username "${DOCKER_USERNAME}" \
