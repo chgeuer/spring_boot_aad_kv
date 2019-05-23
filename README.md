@@ -14,8 +14,6 @@ This demo shows multiple aspects:
 
 ## Overview
 
-![Overview][docs/overview.png]
-
 <div align="center"><img src="docs/overview.png"></img></div>
 
 ## misc links
