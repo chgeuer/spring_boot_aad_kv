@@ -16,6 +16,12 @@ This demo shows multiple aspects:
 
 <div align="center"><img src="docs/overview.png"></img></div>
 
+## Demo
+
+[![YouTube - Spring Boot on Azure](https://img.youtube.com/vi/EO0hdV5Ko1c/0.jpg)](https://www.youtube.com/watch?v=EO0hdV5Ko1c)
+
+- [MP4 Download](https://chrissapvideo.blob.core.windows.net/springboot/SpringBootOnAzure.mp4)
+
 ## misc links
 
 - [Tutorial: Secure a Java web app using the Spring Boot Starter for Azure Active Directory](https://docs.microsoft.com/en-us/java/azure/spring-framework/configure-spring-boot-starter-java-app-with-azure-active-directory?view=azure-java-stable)
