@@ -1,13 +1,29 @@
 #!/bin/bash
 
+#
+# Which AAD Tenant is the web app living in?
+#
 export AAD_TENANT_ID="chgeuerfte.onmicrosoft.com"
+
+#
+# Which Data Center
+#
 export location="westeurope"
-export rg_name="spring3"
-export prefix="spring3"
+
+#
+# Name of the Azure resource group
+#
+export rg_name="spring"
+
+#
+# The prefix is used for naming various resource
+#
+export prefix="chgeuerspring"
+
 echo "Using Azure AD tenant ${AAD_TENANT_ID}, deploying to resource group ${rg_name} in ${location}"
 
 #
-# The Azure AD group which users must be in to access the web app
+# The Azure AD group which users must be in, to access the web app.
 #
 export AAD_GROUP="christian"
 
@@ -20,7 +36,7 @@ export sql_username="${prefix}user"
 export acr_name="${prefix}acr"
 export aci_name="${prefix}aci"
 export keyvault_name="${prefix}kv"
-export KEYVAULT_URI="https://${keyvault_name}.vault.azure.net/"
+export keyvault_url="https://${keyvault_name}.vault.azure.net/"
 export public_web_app_hostname="${aci_name}.${location}.azurecontainer.io"
 
 #
@@ -245,7 +261,7 @@ az container create \
     --ports 8080 \
     --protocol TCP \
     --environment-variables \
-        "KEYVAULT_URI=${KEYVAULT_URI}" \
+        "KEYVAULT_URI=${keyvault_url}" \
         "AAD_TENANT_ID=${AAD_TENANT_ID}" \
         "AAD_GROUP=${AAD_GROUP}" \
         "AAD_CLIENT_ID=${service_principal_id}" \

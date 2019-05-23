@@ -33,7 +33,9 @@ public class HelloController {
    @PreAuthorize("hasRole('christian')")
    @RequestMapping(path = "/", method = RequestMethod.GET)
    public String isSomeChristian() {
-      return "Welcome, you're in the 'christian' Azure AD group URL: " + spring_datasource_url;
+      return "Welcome, you're in the 'christian' Azure AD group URL: " + 
+        "The full connection string for the database is " 
+        + spring_datasource_url;
    }
 
    @PreAuthorize("isAuthenticated()")
