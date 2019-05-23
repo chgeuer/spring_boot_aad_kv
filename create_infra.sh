@@ -215,15 +215,23 @@ export TAG=springaad
 #
 # Please note that this step uses my personal "$github" token...
 #
+export acr_build_task_name="taskhelloworld"
 az acr task create \
     --registry "${acr_name}" \
-    --name taskhelloworld \
+    --name "${acr_build_task_name}" \
     --image $TAG:{{.Run.ID}} \
     --image $TAG:latest \
     --context https://github.com/chgeuer/spring_boot_aad_kv.git \
     --branch master \
     --file Dockerfile \
     --git-access-token $github
+
+#
+# Trigger initial creation of Docker image
+#
+az acr task run \
+    --registry "${acr_name}" \
+    --name "${acr_build_task_name}"
 
 az container create \
     --name "${aci_name}" \
