@@ -4,7 +4,7 @@
  * license information.
  */
 
-package com.sap.concur.demo.aaddemo;
+package com.aaddemo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
