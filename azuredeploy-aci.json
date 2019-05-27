@@ -1,0 +1,68 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "prefix": { "type": "string" },
+        "servicePrincipalObjectID": { "type": "string" },
+        "servicePrincipalClientSecret": { "type": "securestring" },
+        "githubRepositoryUrl": { "type": "string", "defaultValue": "https://github.com/chgeuer/spring_boot_aad_kv.git" },
+        "githubPersonalAccessToken": { "type": "securestring" }
+    },
+    "variables": {
+        "prefix": "[parameters('prefix')]",
+        "githubRepositoryUrl": "[parameters('githubRepositoryUrl')]",
+        "aadGroups": "christian",
+        "names": {
+            "acr": "[concat(variables('prefix'), 'acr')]",
+            "aci": "[concat(variables('prefix'), 'aci')]",
+            "keyvault": "[concat(variables('prefix'), 'kv')]"
+        },
+        "imagename": "springaad",
+        "apiVersion": {
+            "containerregistry_registries": "2017-10-01",
+            "containerregistry_registries_tasks": "2018-09-01",
+            "containerinstance_containergroups": "2018-10-01"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ContainerInstance/containerGroups",
+            "apiVersion": "[variables('apiVersion').containerinstance_containergroups]",
+            "name": "[variables('names').aci]",
+            "tags": { "displayName": "Container Instance Group" },
+            "location": "[resourceGroup().location]",
+            "properties":{
+                "osType": "Linux",
+                "imageRegistryCredentials": [
+                    {
+                        "server": "[reference(resourceId(resourceGroup().name, 'Microsoft.ContainerRegistry/registries', variables('names').acr), variables('apiVersion').containerregistry_registries).loginServer]",
+                        "username": "[listCredentials(resourceId(resourceGroup().name, 'Microsoft.ContainerRegistry/registries', variables('names').acr), variables('apiVersion').containerregistry_registries).username]",
+                        "password": "[listCredentials(resourceId(resourceGroup().name, 'Microsoft.ContainerRegistry/registries', variables('names').acr), variables('apiVersion').containerregistry_registries).passwords[0].value]"
+                    }
+                ],
+                "ipAddress": {
+                    "type": "Public",
+                    "ports": [ { "protocol": "TCP", "port": 8080 } ],
+                    "dnsNameLabel": "[variables('names').aci]"
+                },
+                "containers": [
+                    {
+                        "name": "[variables('imagename')]",
+                        "properties": {
+                            "image": "[concat(reference(resourceId(resourceGroup().name, 'Microsoft.ContainerRegistry/registries', variables('names').acr), variables('apiVersion').containerregistry_registries).loginServer, '/', variables('imagename'), ':latest')]",
+                            "resources": { "requests": { "memoryInGB": 1.5, "cpu": 1 } },
+                            "ports": [ { "protocol": "TCP", "port": 8080 } ],
+                            "environmentVariables": [
+                                { "name": "KEYVAULT_URI", "value": "[concat('https://', variables('names').keyvault, '.vault.azure.net/')]" },
+                                { "name": "AAD_TENANT_ID", "value": "[subscription().tenantId]" },
+                                { "name": "AAD_GROUP", "value": "[variables('aadGroups')]" },
+                                { "name": "AAD_CLIENT_ID", "value": "[parameters('servicePrincipalObjectID')]" },
+                                { "name": "AAD_CLIENT_SECRET", "value": "[parameters('servicePrincipalClientSecret')]" }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

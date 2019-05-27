@@ -1,0 +1,185 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "prefix": { "type": "string" },
+        "servicePrincipalObjectID": { "type": "string" },
+        "servicePrincipalClientSecret": { "type": "securestring" },
+        "sqlPassword": { "type": "securestring" },
+        "githubRepositoryUrl": { "type": "string", "defaultValue": "https://github.com/chgeuer/spring_boot_aad_kv.git" },
+        "githubPersonalAccessToken": { "type": "securestring" }
+    },
+    "variables": {
+        "prefix": "[parameters('prefix')]",
+        "githubRepositoryUrl": "[parameters('githubRepositoryUrl')]",
+        "aadGroups": "christian",
+        "names": {
+            "sql_server": "[concat(variables('prefix'), 'sql')]",
+            "sql_database": "[concat(variables('prefix'), 'db')]",
+            "sql_username": "[concat(variables('prefix'), 'user')]",
+            "acr": "[concat(variables('prefix'), 'acr')]",
+            "aci": "[concat(variables('prefix'), 'aci')]",
+            "keyvault": "[concat(variables('prefix'), 'kv')]"
+        },
+        "imagename": "springaad",
+        "apiVersion": {
+            "sql_servers": "2014-04-01",
+            "sql_servers_databases": "2014-04-01",
+            "keyvault_vaults": "2018-02-14",
+            "keyvault_vaults_secrets": "2018-02-14",
+            "containerregistry_registries": "2017-10-01",
+            "containerregistry_registries_tasks": "2018-09-01",
+            "containerinstance_containergroups": "2018-10-01"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Sql/servers",
+            "name": "[variables('names').sql_server]",
+            "apiVersion": "[variables('apiVersion').sql_servers]",
+            "location": "[resourceGroup().location]",
+            "tags": { "displayName": "SQL Azure Server" },
+            "properties": {
+                "version": "12.0",
+                "administratorLogin": "[variables('names').sql_username]",
+                "administratorLoginPassword": "[parameters('sqlPassword')]"
+            },
+            "resources": [
+                {
+                    "type": "databases",
+                    "name": "[variables('names').sql_database]",
+                    "dependsOn": [ "[concat('Microsoft.Sql/servers/', variables('names').sql_server)]" ],
+                    "apiVersion": "[variables('apiVersion').sql_servers_databases]",
+                    "location": "[resourceGroup().location]",
+                    "tags": { "displayName": "SQL Azure Database" },
+                    "properties": {
+                        "requestedServiceObjectiveName": "Basic",
+                        "collation": "SQL_Latin1_General_CP1_CI_AS"
+                    }
+                },
+                {
+                    "type": "firewallRules",
+                    "name": "AllowAllWindowsAzureIps",
+                    "apiVersion": "[variables('apiVersion').sql_servers_databases]",
+                    "dependsOn": [ "[concat('Microsoft.Sql/servers/', variables('names').sql_server)]" ],
+                    "properties": { "startIpAddress": "0.0.0.0", "endIpAddress": "0.0.0.0" }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults",
+            "name": "[variables('names').keyvault]",
+            "apiVersion": "[variables('apiVersion').keyvault_vaults]",
+            "location": "[resourceGroup().location]",
+            "tags": { "displayName": "Key Vault" },
+            "properties": {
+                "tenantId": "[subscription().tenantId]",
+                "enabledForDeployment": false,
+                "enabledForDiskEncryption": false,
+                "enabledForTemplateDeployment": true,
+                "sku": { "name": "Standard", "family": "A" },
+                "networkAcls": { "value": { "defaultAction": "Allow", "bypass": "AzureServices" } },
+                "accessPolicies": [
+                    {
+                        "tenantId": "[subscription().tenantId]",
+                        "objectId": "[parameters('servicePrincipalObjectID')]",
+                        "permissions": { "secrets": [ "get", "list" ] }
+                    }
+                ]
+            },
+            "resources": [
+                {
+                    "type": "secrets",
+                    "apiVersion": "[variables('apiVersion').keyvault_vaults_secrets]",
+                    "dependsOn": [ "[concat('Microsoft.KeyVault/vaults/', variables('names').keyvault)]" ],
+                    "name": "[spring.convertSpringBootPropertyToKeyVaultName('spring.datasource.url')]",
+                    "properties": {
+                      "value": "[spring.createJdbcConnectionString(variables('names').sql_server, variables('names').sql_database, variables('names').sql_username, parameters('sqlPassword'))]",
+                      "contentType": "string"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.ContainerRegistry/registries",
+            "apiVersion": "[variables('apiVersion').containerregistry_registries]",
+            "name": "[variables('names').acr]",
+            "tags": { "displayName": "Container Registry" },
+            "location": "[resourceGroup().location]",
+            "sku": { "name": "Standard", "tier": "Standard" },
+            "properties": { "adminUserEnabled": true },
+            "resources": [
+                {
+                    "type": "tasks",
+                    "apiVersion": "[variables('apiVersion').containerregistry_registries_tasks]",
+                    "dependsOn": [ "[concat('Microsoft.ContainerRegistry/registries/', variables('names').acr)]" ],
+                    "name": "build-springaad-task",
+                    "tags": { "displayName": "Docker Image Build Task" },
+                    "location": "[resourceGroup().location]",
+                    "properties": {
+                        "platform": { "os": "linux", "architecture": "amd64" },
+                        "agentConfiguration": { "cpu": 2 },
+                        "timeout": 3600,
+                        "step": {
+                            "type": "Docker",
+                            "contextPath": "[variables('githubRepositoryUrl')]",
+                            "contextAccessToken": "[parameters('githubPersonalAccessToken')]",
+                            "dockerFilePath": "Dockerfile",
+                            "imageNames": [
+                                "[concat(variables('imagename'), ':{{.Run.ID}}')]",
+                                "[concat(variables('imagename'), ':latest')]"
+                            ],
+                            "isPushEnabled": true,
+                            "noCache": false
+                        },
+                        "trigger": {
+                            "sourceTriggers": [
+                                {
+                                    "name": "defaultSourceTriggerName",
+                                    "sourceTriggerEvents": [ "commit" ],
+                                    "sourceRepository": {
+                                        "sourceControlType": "Github",
+                                        "repositoryUrl": "[variables('githubRepositoryUrl')]",
+                                        "branch": "master",
+                                        "sourceControlAuthProperties": {
+                                            "tokenType": "PAT",
+                                            "token": "[parameters('githubPersonalAccessToken')]"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "functions": [
+        {
+            "namespace": "spring",
+            "members": {
+                "convertSpringBootPropertyToKeyVaultName": {
+                    "parameters": [
+                        { "name": "springBootProperty", "type": "string" }
+                    ],
+                    "output": {
+                        "value": "[replace(parameters('springBootProperty'), '.', '-')]",
+                        "type": "string"
+                    }
+                },
+                "createJdbcConnectionString": {
+                    "parameters": [
+                        { "name": "server", "type": "string" },
+                        { "name": "database", "type": "string" },
+                        { "name": "username", "type": "string" },
+                        { "name": "password", "type": "string" }
+                    ],
+                    "output": {
+                        "value": "[concat('jdbc:sqlserver://', parameters('server'), '.database.windows.net:1433;database=', parameters('database'), ';user=', parameters('username'), '@', parameters('server'), ';password=', parameters('password'), ';encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;')]",
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    ]
+}

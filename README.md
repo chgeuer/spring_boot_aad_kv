@@ -28,3 +28,14 @@ This demo shows multiple aspects:
 - [PetController](https://github.com/Azure-Samples/spring-data-jdbc-on-azure/blob/master/src/main/java/com/microsoft/azure/samples/spring/PetController.java)
 - [Azure Key Vault Secrets Spring Boot Starter Sample](https://github.com/microsoft/azure-spring-boot/tree/master/azure-spring-boot-samples/azure-keyvault-secrets-spring-boot-sample)
 - [Bootiful Azure: SQL-based data access with Microsoft SQL Server (2/6)](https://spring.io/blog/2019/01/07/bootiful-azure-sql-based-data-access-with-microsoft-sql-server-2-6)
+
+## Docs
+
+- [ARM template functions](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-template-functions)
+- [Microsoft.Sql/servers](https://docs.microsoft.com/en-us/azure/templates/microsoft.sql/2014-04-01/servers)
+- [Microsoft.KeyVault/vaults](https://docs.microsoft.com/en-us/azure/templates/microsoft.keyvault/2018-02-14/vaults)
+- [Microsoft.KeyVault/vaults/accessPolicies](https://docs.microsoft.com/en-us/azure/templates/microsoft.keyvault/2018-02-14/vaults/accesspolicies)
+- [Microsoft.KeyVault/vaults/secrets](https://docs.microsoft.com/en-us/azure/templates/microsoft.keyvault/2018-02-14/vaults/secrets)
+- [Microsoft.ContainerRegistry/registries](https://docs.microsoft.com/en-us/azure/templates/microsoft.containerregistry/2017-10-01/registries)
+- [Microsoft.ContainerRegistry/registries/tasks](https://docs.microsoft.com/en-us/azure/templates/microsoft.containerregistry/2018-09-01/registries/tasks)
+- [Microsoft.ContainerInstance/containerGroups](https://docs.microsoft.com/en-us/azure/templates/microsoft.containerinstance/2018-10-01/containergroups)
