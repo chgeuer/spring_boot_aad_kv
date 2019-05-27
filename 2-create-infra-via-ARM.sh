@@ -3,8 +3,8 @@
 source ./0-variables.sh
 
 #
-# Now that the service principal exists, we can either create resources step-by-step,
-# or launch an ARM template
+# Now that the service principal exists, we launch an ARM template to create
+# SQL Server, SQL Database, KeyVault and Azure Container Registry
 #
 az group deployment create \
     --resource-group "${rg_name}" \
@@ -19,12 +19,16 @@ az group deployment create \
     \"githubRepositoryUrl\": { \"value\": \"https://github.com/chgeuer/spring_boot_aad_kv.git\" } \
 }"
 
-
+#
+# Build the Docker image in the registry
+#
 az acr task run \
     --registry "${acr_name}" \
     --name "${acr_build_task_name}"
 
-
+#
+# Now that the Docker image is ready to use, we can trigger the compute node creation. 
+#
 az group deployment create \
     --resource-group "${rg_name}" \
     --template-file azuredeploy-aci.json \
