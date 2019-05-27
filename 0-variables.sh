@@ -13,12 +13,12 @@ export location="westeurope"
 #
 # Name of the Azure resource group
 #
-export rg_name="t1"
+export rg_name="spring"
 
 #
 # The prefix is used for naming various resource
 #
-export prefix="foo"
+export prefix="springchgp"
 
 echo "Using Azure AD tenant ${AAD_TENANT_ID}, deploying to resource group ${rg_name} in ${location}"
 

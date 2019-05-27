@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "prefix": { "type": "string" },
-        "servicePrincipalObjectID": { "type": "string" },
+        "servicePrincipalApplicationID": { "type": "string" },
         "servicePrincipalClientSecret": { "type": "securestring" },
         "githubRepositoryUrl": { "type": "string", "defaultValue": "https://github.com/chgeuer/spring_boot_aad_kv.git" },
         "githubPersonalAccessToken": { "type": "securestring" }
@@ -56,8 +56,8 @@
                                 { "name": "KEYVAULT_URI", "value": "[concat('https://', variables('names').keyvault, '.vault.azure.net/')]" },
                                 { "name": "AAD_TENANT_ID", "value": "[subscription().tenantId]" },
                                 { "name": "AAD_GROUP", "value": "[variables('aadGroups')]" },
-                                { "name": "AAD_CLIENT_ID", "value": "[parameters('servicePrincipalObjectID')]" },
-                                { "name": "AAD_CLIENT_SECRET", "value": "[parameters('servicePrincipalClientSecret')]" }
+                                { "name": "AAD_CLIENT_ID", "value": "[parameters('servicePrincipalApplicationID')]" },
+                                { "name": "AAD_CLIENT_SECRET", "secureValue": "[parameters('servicePrincipalClientSecret')]" }
                             ]
                         }
                     }

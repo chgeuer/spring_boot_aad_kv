@@ -88,7 +88,7 @@ az keyvault create \
 #
 az keyvault set-policy \
     --name "${keyvault_name}" \
-    --spn "${service_principal_id}" \
+    --spn "${service_principal_application_id}" \
     --secret-permission get list
 
 #
@@ -156,7 +156,7 @@ az container create \
         "KEYVAULT_URI=${keyvault_url}" \
         "AAD_TENANT_ID=${AAD_TENANT_ID}" \
         "AAD_GROUP=${AAD_GROUP}" \
-        "AAD_CLIENT_ID=${service_principal_id}" \
+        "AAD_CLIENT_ID=${service_principal_application_id}" \
     --secure-environment-variables \
         "AAD_CLIENT_SECRET=${service_principal_pass}"
 

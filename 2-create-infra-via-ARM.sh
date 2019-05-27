@@ -12,7 +12,7 @@ az group deployment create \
     --parameters \
 "{\
     \"prefix\": { \"value\": \"${prefix}\" }, \
-    \"servicePrincipalObjectID\": { \"value\": \"${service_principal_id}\" }, \
+    \"servicePrincipalObjectID\": { \"value\": \"${service_principal_object_id}\" }, \
     \"servicePrincipalClientSecret\": { \"value\": \"${service_principal_pass}\" }, \
     \"sqlPassword\": { \"value\": \"${sql_password}\" }, \
     \"githubPersonalAccessToken\": { \"value\": \"${github}\" }, \
@@ -35,8 +35,8 @@ az group deployment create \
     --parameters "\
 { \
     \"prefix\": { \"value\": \"${prefix}\" }, \
-    \"servicePrincipalObjectID\": { \"value\": \"$(cat .passwords/.${rg_name}-${prefix}-service_principal_id)\" }, \
-    \"servicePrincipalClientSecret\": { \"value\": \"$(cat .passwords/.${rg_name}-${prefix}-service_principal_pass)\" }, \
+    \"servicePrincipalApplicationID\": { \"value\": \"${service_principal_application_id}\" }, \
+    \"servicePrincipalClientSecret\": { \"value\": \"${service_principal_pass}\" }, \
     \"githubPersonalAccessToken\": { \"value\": \"${github}\" }, \
     \"githubRepositoryUrl\": { \"value\": \"https://github.com/chgeuer/spring_boot_aad_kv.git\" } \
 } \
