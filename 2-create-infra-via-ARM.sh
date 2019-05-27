@@ -2,6 +2,11 @@
 
 source ./0-variables.sh
 
+az group create \
+    --name "${rg_name}" \
+    --location  "${location}"
+
+
 #
 # Now that the service principal exists, we launch an ARM template to create
 # SQL Server, SQL Database, KeyVault and Azure Container Registry
