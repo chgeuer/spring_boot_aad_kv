@@ -6,18 +6,18 @@
 mkdir .passwords
 export sql_password="$(openssl rand 14 -base64)"
 echo "${sql_password}" > ".passwords/.${rg_name}-${prefix}-sql_password"
-sql_password="$(cat .passwords/.${rg_name}-${prefix}-sql_password)"
+export sql_password="$(cat .passwords/.${rg_name}-${prefix}-sql_password)"
 
 
 # export service_principal_pass="${AAD_CLIENT_ID}"
 export service_principal_pass="$(openssl rand 14 -base64)"
 echo "${service_principal_pass}" > ".passwords/.${rg_name}-${prefix}-service_principal_pass"
-service_principal_pass="$(cat .passwords/.${rg_name}-${prefix}-service_principal_pass)"
+export service_principal_pass="$(cat .passwords/.${rg_name}-${prefix}-service_principal_pass)"
 
-export aadGraphAPI="00000002-0000-0000-c000-000000000000"
-export signInAndReadUserProfile="311a71cc-e848-46a1-bdf8-97ff7156d8e6"
+aadGraphAPI="00000002-0000-0000-c000-000000000000"
+signInAndReadUserProfile="311a71cc-e848-46a1-bdf8-97ff7156d8e6"
 
-export MANIFEST="[
+MANIFEST="[
     {
         \"resourceAppId\": \"${aadGraphAPI}\",
         \"resourceAccess\": [
@@ -40,12 +40,11 @@ export service_principal_application_id="$(az ad app create \
     --reply-urls \
         "http://localhost:8080/login/oauth2/code/azure" \
         "http://${public_web_app_hostname}:8080/login/oauth2/code/azure" \
-        "https://biseviewer.sap.corp/login/oauth2/code/azure" \
     --required-resource-accesses @manifest.json \
     --query "appId" -o tsv)"
 echo "Application ID: ${service_principal_application_id}"
 echo "${service_principal_application_id}" > ".passwords/.${rg_name}-${prefix}-service_principal_application_id"
-service_principal_application_id="$(cat .passwords/.${rg_name}-${prefix}-service_principal_application_id)"
+export service_principal_application_id="$(cat .passwords/.${rg_name}-${prefix}-service_principal_application_id)"
 
 rm manifest.json
 

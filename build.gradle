@@ -5,7 +5,7 @@ plugins {
 
 apply plugin: 'io.spring.dependency-management'
 
-group = 'com.sap.concur.demo'
+group = 'com.aaddemo'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '12'
 // sourceCompatibility = '1.8'

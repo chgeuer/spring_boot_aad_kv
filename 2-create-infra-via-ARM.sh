@@ -13,7 +13,7 @@ az group create \
 #
 az group deployment create \
     --resource-group "${rg_name}" \
-    --template-file azuredeploy.json \
+    --template-file azuredeploy-0.json \
     --parameters \
 "{\
     \"prefix\": { \"value\": \"${prefix}\" }, \
@@ -36,7 +36,7 @@ az acr task run \
 #
 az group deployment create \
     --resource-group "${rg_name}" \
-    --template-file azuredeploy-aci.json \
+    --template-file azuredeploy-1.json \
     --parameters "\
 { \
     \"prefix\": { \"value\": \"${prefix}\" }, \

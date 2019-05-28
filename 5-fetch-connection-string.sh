@@ -1,5 +1,8 @@
 #!/bin/bash
 
+service_principal_application_id="$(cat .passwords/.${rg_name}-${prefix}-service_principal_application_id)"
+service_principal_pass="$(cat .passwords/.${rg_name}-${prefix}-service_principal_pass)"
+
 access_token="$(curl \
     --silent \
     --request POST \
