@@ -14,17 +14,16 @@ export service_principal_pass="$(openssl rand 14 -base64)"
 echo "${service_principal_pass}" > ".passwords/.${rg_name}-${prefix}-service_principal_pass"
 export service_principal_pass="$(cat .passwords/.${rg_name}-${prefix}-service_principal_pass)"
 
-aadGraphAPI="00000002-0000-0000-c000-000000000000"
-signInAndReadUserProfile="311a71cc-e848-46a1-bdf8-97ff7156d8e6"
-
-MANIFEST="[
-    {
-        \"resourceAppId\": \"${aadGraphAPI}\",
-        \"resourceAccess\": [
-            { \"id\": \"${signInAndReadUserProfile}\", \"type\": \"Scope\" }
-        ]
-    }
-]"
+graphJSON="$(az ad sp show --id "https://graph.windows.net")"
+oauth_id() {
+    echo "$(echo ${graphJSON} | jq -r ".oauth2Permissions[] | select(.value == \"${1}\") | .id")"
+}
+MANIFEST="[ {
+    \"resourceAppId\": \"$(echo ${graphJSON} | jq -r .appId)\",
+    \"resourceAccess\": [
+        { \"id\": \"$(oauth_id User.Read)\", \"type\": \"Scope\" }
+    ]
+} ]"
 echo "${MANIFEST}" > manifest.json
 
 #export service_principal_application_id="${AAD_CLIENT_ID}"
