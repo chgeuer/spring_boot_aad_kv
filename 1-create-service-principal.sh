@@ -14,6 +14,8 @@ export service_principal_pass="$(openssl rand 14 -base64)"
 echo "${service_principal_pass}" > ".passwords/.${rg_name}-${prefix}-service_principal_pass"
 export service_principal_pass="$(cat .passwords/.${rg_name}-${prefix}-service_principal_pass)"
 
+export aadGraphAPI="00000002-0000-0000-c000-000000000000"
+
 graphJSON="$(az ad sp show --id "https://graph.windows.net")"
 oauth_id() {
     echo "$(echo ${graphJSON} | jq -r ".oauth2Permissions[] | select(.value == \"${1}\") | .id")"
