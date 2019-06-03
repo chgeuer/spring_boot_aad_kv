@@ -1,0 +1,25 @@
+{
+    "tenantID": "sometenant.onmicrosoft.com",
+    "servicePrincipals": {
+        "deadbeef-efa9-42ea-9ac3-28a920370be6": "ewewM/OblEL/WOJweC0="
+    },
+    "metadata": {
+        "compute": {
+            "provider":"Microsoft.Compute",
+            "tags":"tag1:val2",
+            "azEnvironment":"AzurePublicCloud",
+            "location":"westeurope",
+            "subscriptionId":"deadbeef-bee4-484b-bf13-d6a5505d2b51",
+            "resourceGroupName":"spring",
+            "vmId":"c7619932-27e3-4a63-988c-460bd290ca55",
+            "name":"somevm",
+            "vmSize":"Standard_D2s_v3",
+            "customData":"",
+            "placementGroupId":"", "platformFaultDomain":"0", "platformUpdateDomain":"0",
+            "osType":"Linux",
+            "publisher":"Canonical", "offer":"UbuntuServer", "sku":"18.04-LTS", "version":"18.04.201905290",
+            "vmScaleSetName":"",
+            "zone":""
+        }
+    }
+}
