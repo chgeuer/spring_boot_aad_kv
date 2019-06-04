@@ -13,7 +13,7 @@ export location="westeurope"
 #
 # Name of the Azure resource group
 #
-export rg_name="spring"
+export rg_name="spring1"
 
 #
 # The prefix is used for naming various resource
@@ -42,3 +42,10 @@ export public_web_app_hostname="${aci_name}.${location}.azurecontainer.io"
 export TAG=springaad
 export acr_build_task_name="build-${TAG}-task"
 
+
+
+
+export sql_password="$(cat .passwords/.${rg_name}-${prefix}-sql_password)"
+export service_principal_pass="$(cat .passwords/.${rg_name}-${prefix}-service_principal_pass)"
+export service_principal_application_id="$(cat .passwords/.${rg_name}-${prefix}-service_principal_application_id)"
+export service_principal_object_id="$(cat .passwords/.${rg_name}-${prefix}-service_principal_object_id)"

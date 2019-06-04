@@ -19,7 +19,8 @@
             "sql_username": "[concat(variables('prefix'), 'user')]",
             "acr": "[concat(variables('prefix'), 'acr')]",
             "aci": "[concat(variables('prefix'), 'aci')]",
-            "keyvault": "[concat(variables('prefix'), 'kv')]"
+            "keyvault": "[concat(variables('prefix'), 'kv')]",
+            "identity": "[concat(variables('prefix'), 'identity')]"
         },
         "imagename": "springaad",
         "apiVersion": {
@@ -29,7 +30,8 @@
             "keyvault_vaults_secrets": "2018-02-14",
             "containerregistry_registries": "2017-10-01",
             "containerregistry_registries_tasks": "2018-09-01",
-            "containerinstance_containergroups": "2018-10-01"
+            "containerinstance_containergroups": "2018-10-01",
+            "managedidentity_userassignedidentities": "2015-08-31-PREVIEW"
         }
     },
     "resources": [
@@ -67,11 +69,18 @@
             ]
         },
         {
+            "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+            "name": "[variables('names').identity]",
+            "apiVersion": "[variables('apiVersion').managedidentity_userassignedidentities]",
+            "location": "[resourceGroup().location]"
+        },
+        {
             "type": "Microsoft.KeyVault/vaults",
             "name": "[variables('names').keyvault]",
             "apiVersion": "[variables('apiVersion').keyvault_vaults]",
             "location": "[resourceGroup().location]",
             "tags": { "displayName": "Key Vault" },
+            "dependsOn": [ "[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('names').identity)]" ],
             "properties": {
                 "tenantId": "[subscription().tenantId]",
                 "enabledForDeployment": false,
@@ -82,7 +91,7 @@
                 "accessPolicies": [
                     {
                         "tenantId": "[subscription().tenantId]",
-                        "objectId": "[parameters('servicePrincipalObjectID')]",
+                        "objectId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('names').identity), variables('apiVersion').managedidentity_userassignedidentities).principalId]",
                         "permissions": { "secrets": [ "get", "list" ] }
                     }
                 ]

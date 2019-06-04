@@ -16,7 +16,7 @@ export service_principal_pass="$(cat .passwords/.${rg_name}-${prefix}-service_pr
 
 export aadGraphAPI="00000002-0000-0000-c000-000000000000"
 
-graphJSON="$(az ad sp show --id "https://graph.windows.net")"
+graphJSON="$(az ad sp show --id ${aadGraphAPI})"
 oauth_id() {
     echo "$(echo ${graphJSON} | jq -r ".oauth2Permissions[] | select(.value == \"${1}\") | .id")"
 }
@@ -27,6 +27,7 @@ MANIFEST="[ {
     ]
 } ]"
 echo "${MANIFEST}" > manifest.json
+
 
 #export service_principal_application_id="${AAD_CLIENT_ID}"
 export service_principal_application_id="$(az ad app create \
@@ -74,11 +75,11 @@ export service_principal_object_id="$(cat .passwords/.${rg_name}-${prefix}-servi
 #         "http://${public_web_app_hostname}:8080/login/oauth2/code/azure" \
 #         "http://localhost:8080/login/oauth2/code/azure"
 
-az ad app permission grant \
-    --id "${service_principal_application_id}" \
-    --api "${aadGraphAPI}"
-
 # az ad app permission add \
 #     --id "${service_principal_application_id}" \
 #     --api "${aadGraphAPI}" \
-#     --api-permissions "${signInAndReadUserProfile}=Scope"
+#     --api-permissions "$(oauth_id User.Read)=Scope"
+
+az ad app permission grant \
+    --id "${service_principal_application_id}" \
+    --api "${aadGraphAPI}"
