@@ -39,3 +39,4 @@ This demo shows multiple aspects:
 - [Microsoft.ContainerRegistry/registries](https://docs.microsoft.com/en-us/azure/templates/microsoft.containerregistry/2017-10-01/registries)
 - [Microsoft.ContainerRegistry/registries/tasks](https://docs.microsoft.com/en-us/azure/templates/microsoft.containerregistry/2018-09-01/registries/tasks)
 - [Microsoft.ContainerInstance/containerGroups](https://docs.microsoft.com/en-us/azure/templates/microsoft.containerinstance/2018-10-01/containergroups)
+- [Microsoft.ManagedIdentity/userAssignedIdentities](https://docs.microsoft.com/en-us/azure/templates/microsoft.managedidentity/2018-11-30/userassignedidentities)

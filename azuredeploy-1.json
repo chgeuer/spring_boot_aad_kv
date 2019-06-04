@@ -23,7 +23,7 @@
             "containerregistry_registries": "2017-10-01",
             "containerregistry_registries_tasks": "2018-09-01",
             "containerinstance_containergroups": "2018-10-01",
-            "managedidentity_userassignedidentities": "2015-08-31-PREVIEW"
+            "managedidentity_userassignedidentities": "2018-11-30"
         }
     },
     "resources": [
