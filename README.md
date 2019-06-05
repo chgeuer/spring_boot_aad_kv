@@ -10,7 +10,10 @@ This demo shows multiple aspects:
 - The web app authenticates users via Azure AD.
   - On the [/](http://localhost:8080/) endpoint, it enforces group membership. 
   - On the [/claims](http://localhost:8080/claims) endpoint, it prints out the user's security token's properties. 
-  - On `GET /pet`, `POST /pet/create`, `GET /pet/123` and `DELETE /pet/123` we authenticate the user, and interact with SQL Azure in the back. 
+  - On `GET /pet`, `POST /pet/create`, `GET /pet/123` and `DELETE /pet/123` we authenticate the user, and interact with SQL Azure in the back.
+- Security Setup
+  - The application has a service principal, which is used to query group membership information in the Azure Active Directory Graph API.
+  - The application uses a user-assigned managed identity to authN to KeyVault to fetch the Azure SQL DB's connection string.
 
 ## Overview
 
