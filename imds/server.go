@@ -1,26 +1,22 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 )
 
-const (
-	configFile = "config.json"
-)
-
-func readJSONConfig(filename string) config {
+func readJSONConfig(filename string) *config {
 	file, _ := ioutil.ReadFile(filename)
 	var data config
 	_ = json.Unmarshal([]byte(file), &data)
-	return data
+	return &data
 }
 
 func main() {
@@ -52,44 +48,14 @@ func main() {
 	// curl -H Metadata:true "http://169.254.169.254/metadata/instance?api-version=2017-08-
 	// {"compute":{"azEnvironment":"AzurePublicCloud","customData":"","location":"westeurope","name":"v","offer":"UbuntuServer","osType":"Linux","placementGroupId":"","plan":{"name":"","product":"","publisher":""},"platformFaultDomain":"0","platformUpdateDomain":"0","provider":"Microsoft.Compute","publicKeys":[{"keyData":"ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAk/ViUPrGp7KoJLuN2PgofgMyw7SN9zfLYFDDR0TRYa8cOvJlE8NdZYt6Oqa4aL/fslKr9bmlMCdawhZRL7sHccIIS0I0zG7iD15rQL3/Y5aZOf3ML+bebpSj+SE5OeHT9iobgsYpK8gq72d8tmZZAfKhx6fRJsgC2j2xXH/GveoZ5GkHnhJUYuYPmNjEb/PK7LT43XuP+E9Rderr3LPUTuBeGVW9do0HS7X8I2uTn0+BqgkZLOO4FCnSXxh1u6fuD++ZgOZVmB6Q1xEdHSA7LLnPkjDZqbWezLIh5cSdNPUW2JG7tMxQTAZzVoNMb6vAVsfslB16rqZQ21EdIq+0pw== chgeuer-dcos-1","path":"/home/chgeuer/.ssh/authorized_keys"}],"publisher":"Canonical","resourceGroupName":"spring","sku":"18.04-LTS","subscriptionId":"724467b5-bee4-484b-bf13-d6a5505d2b51","tags":"tag1:val2","version":"18.04.201905290","vmId":"c7619932-27e3-4a63-988c-460bd290ca55","vmScaleSetName":"","vmSize":"Standard_D2s_v3","zone":""},"network":{"interface":[{"ipv4":{"ipAddress":[{"privateIpAddress":"10.0.0.4","publicIpAddress":"13.81.2.149"}],"subnet":[{"address":"10.0.0.0","prefix":"24"}]},"ipv6":{"ipAddress":[]},"macAddress":"000D3A48FA8D"}]}}
 
-	http.HandleFunc("/metadata/identity/oauth2/token", handlerTokenIssuance)
-	http.HandleFunc("/metadata/instance/compute", func(w http.ResponseWriter, r *http.Request) {
-		if emittedErrorBecauseMissingMetadata(w, r) {
-			return
-		}
-		if err := json.NewEncoder(w).Encode(readJSONConfig(configFile).InstanceMetadata.ComputeMetadata); err != nil {
-			panic(err)
-		}
-	})
+	cfg := readJSONConfig("config.json")
 
-	http.HandleFunc("/metadata/instance/network", func(w http.ResponseWriter, r *http.Request) {
-		if emittedErrorBecauseMissingMetadata(w, r) {
-			return
-		}
-		if err := json.NewEncoder(w).Encode(readJSONConfig(configFile).InstanceMetadata.NetworkMetadata); err != nil {
-			panic(err)
-		}
-	})
-
-	http.HandleFunc("/metadata/instance", func(w http.ResponseWriter, r *http.Request) {
-		if emittedErrorBecauseMissingMetadata(w, r) {
-			return
-		}
-		if err := json.NewEncoder(w).Encode(readJSONConfig(configFile).InstanceMetadata); err != nil {
-			panic(err)
-		}
-	})
-
-	http.HandleFunc("/", handlerDefault)
+	http.HandleFunc("/metadata/identity/oauth2/token", cfg.handlerTokenIssuance)
+	http.HandleFunc("/metadata/instance/compute", cfg.returnData(cfg.InstanceMetadata.ComputeMetadata))
+	http.HandleFunc("/metadata/instance/network", cfg.returnData(cfg.InstanceMetadata.NetworkMetadata))
+	http.HandleFunc("/metadata/instance", cfg.returnData(cfg.InstanceMetadata))
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:80", addr), nil))
-}
-
-// handler echoes the Path component of the requested URL.
-func handlerDefault(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("URL.Path = %q\n", r.URL.Path)
-	fmt.Printf("URL.Path = %v\n", r)
-	fmt.Fprintf(w, "URL.Path = %q\n", r.URL.Path)
 }
 
 func emittedErrorBecauseMissingMetadata(w http.ResponseWriter, r *http.Request) bool {
@@ -106,63 +72,83 @@ func emittedErrorBecauseMissingMetadata(w http.ResponseWriter, r *http.Request) 
 	return false
 }
 
-func handlerTokenIssuance(w http.ResponseWriter, r *http.Request) {
+func (cfg *config) returnData(data interface{}) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if emittedErrorBecauseMissingMetadata(w, r) {
+			return
+		}
+		if err := json.NewEncoder(w).Encode(data); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func (cfg *config) handlerTokenIssuance(w http.ResponseWriter, r *http.Request) {
 	if emittedErrorBecauseMissingMetadata(w, r) {
 		return
 	}
 
-	config := readJSONConfig(configFile)
-
-	// "/metadata/identity/oauth2/token"
-	//  /metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fvault.azure.net%2F&client_id=5d876433-efa9-42ea-9ac3-28a920370be6
-	fmt.Printf("Issue token URL.Path = %q\n", r.URL.Path)
-
 	query := r.URL.Query()
-	resource, ok := query["resource"]
-	if ok {
-		fmt.Printf("Resource %s\n", resource[0])
-	}
-	clientID, ok := query["client_id"]
-	if ok {
-		fmt.Printf("client_id %s\n", clientID[0])
+	form := url.Values{"grant_type": {"client_credentials"}}
+
+	if resource, ok := query["resource"]; ok && len(resource) == 1 {
+		form.Add("resource", resource[0])
 	}
 
-	form := url.Values{
-		"grant_type":    {"client_credentials"},
-		"client_id":     {clientID[0]},
-		"client_secret": {config.ServicePrincipalKeys[clientID[0]]},
-		"resource":      {resource[0]},
+	if clientID, ok := query["client_id"]; ok && len(clientID) == 1 && clientID[0] != "" {
+		if clientSecret, ok := cfg.ServicePrincipalKeys[clientID[0]]; ok {
+			form.Add("client_id", clientID[0])
+			form.Add("client_secret", clientSecret)
+		}
+	} else {
+		// if no client_id is specified, simply take the first entry
+		for id, key := range cfg.ServicePrincipalKeys {
+			form.Add("client_id", id)
+			form.Add("client_secret", key)
+			break
+		}
 	}
 
-	request, err := http.NewRequest(http.MethodPost, fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/token", config.TenantID), strings.NewReader(form.Encode()))
+	requestBody := strings.NewReader(form.Encode())
+
+	aadURL := fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/token", cfg.TenantID)
+	request, err := http.NewRequest(http.MethodPost, aadURL, requestBody)
 	if err != nil {
-		log.Print(err)
-		os.Exit(1)
+		log.Fatal(err)
+		return
 	}
 
-	// proxyUrl, _ := url.Parse("http://127.0.0.1:8888")
-	var netClient = &http.Client{
-		Timeout: time.Second * 10,
-		// Transport: &http.Transport{
-		// 	Proxy:           http.ProxyURL(proxyUrl),
-		// 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		// },
-	}
+	var netClient = newHTTPClient(false)
+
 	response, err := netClient.Do(request)
 	if err != nil {
-		log.Print(err)
-		os.Exit(1)
+		log.Fatal(err)
+		return
 	}
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		log.Print(err)
-		os.Exit(1)
+		log.Fatal(err)
+		return
 	}
 
 	fmt.Printf("%s", string(body))
 
 	w.Write(body)
+}
+
+func newHTTPClient(useFiddler bool) *http.Client {
+	var netClient = &http.Client{
+		Timeout: time.Second * 10,
+	}
+	if useFiddler {
+		proxyURL, _ := url.Parse("http://127.0.0.1:8888")
+		netClient.Transport = &http.Transport{
+			Proxy:           http.ProxyURL(proxyURL),
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+	}
+	return netClient
 }
 
 type config struct {
